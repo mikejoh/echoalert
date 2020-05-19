@@ -1,0 +1,59 @@
+version: '3.7'
+
+services:
+  alertmanager:
+    image: prom/alertmanager:v0.20.0
+    volumes:
+      - $PWD/alertmanager/alertmanager.yml:/alertmanager/alertmanager.yml
+    ports:
+      - 9093:9093
+    command: ["--config.file=/alertmanager/alertmanager.yml", "--storage.path=/alertmanager/data/"]
+    networks:
+      monnet:
+        aliases:
+          - alertmanager
+
+  prometheus:
+    image: prom/prometheus:v2.18.0
+    volumes:
+      - $PWD/prometheus/prometheus.yml:/prometheus/prometheus.yml
+      - $PWD/prometheus/blackbox-rules.yml:/prometheus/blackbox-rules.yml
+    ports:
+      - 9090:9090
+    command: ["--config.file=/prometheus/prometheus.yml", "--web.enable-lifecycle"]
+    networks:
+      monnet:
+        aliases:
+          - prometheus
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.16.0
+    volumes:
+      - $PWD/prometheus/blackbox.yml:/blackbox/blackbox.yml
+    ports:
+      - 9115:9115
+    command: ["--config.file=/blackbox/blackbox.yml"]
+    networks:
+      monnet:
+        aliases:
+          - blackbox-exporter
+
+  echoalert:
+    build: 
+      context: ./echoalert
+    ports:
+      - 8080:8080
+    volumes:
+      - $PWD/echoalert/index.tmpl:/index.tmpl
+    networks:
+      monnet:
+        aliases:
+          - echoalert
+
+networks:
+  monnet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet:  192.168.250.0/24

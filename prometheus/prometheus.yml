@@ -1,0 +1,60 @@
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /prometheus/blackbox-rules.yml
+
+alerting:
+  alertmanagers:
+  - scheme: http
+    static_configs:
+    - targets:
+      - "alertmanager:9093"
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: blackbox
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - blackbox-exporter:9115
+
+  - job_name: blackbox-http-checks
+    honor_timestamps: true
+    params:
+      module: [http_2xx]
+    scrape_interval: 1m
+    scrape_timeout: 10s
+    metrics_path: /probe
+    scheme: http
+    static_configs:
+      - targets:
+          - http://echoalert:8080/shapeshifter?code=200&body=ok
+          - http://echoalert:8080/shapeshifter?code=401&body=notok
+    relabel_configs:
+      - source_labels: [__address__]
+        separator: ;
+        regex: (.*)
+        target_label: __param_target
+        replacement: $1
+        action: replace
+      - source_labels: [__param_target]
+        separator: ;
+        regex: (.*)
+        target_label: instance
+        replacement: $1
+        action: replace
+      - separator: ;
+        regex: (.*)
+        target_label: __address__
+        replacement: blackbox-exporter:9115
+        action: replace
+      - separator: ;
+        regex: (.*)
+        target_label: job
+        replacement: blackbox-exporter
+        action: replace
