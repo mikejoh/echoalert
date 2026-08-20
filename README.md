@@ -1,5 +1,7 @@
 # Echo Alert - Alertmanager proof of concept
 
+[![CI](https://github.com/mikejoh/echoalert/actions/workflows/go.yml/badge.svg)](https://github.com/mikejoh/echoalert/actions/workflows/go.yml)
+
 Echo Alert or `echoalert` is a small web service that consists of a number of webhook receivers that will be defined as receivers in the Alertmanager configuration. The `echoalert` web service can also respond with a fixed HTTP status code by providing it as a query parameter in the URL.
 
 When alerts are triggered they'll be processed by Alertmanager and by matching on labels configured on the alert rules the alerts will be sent to different webhook receivers. In this case the same web service will handle all webhook receiver endpoints.
